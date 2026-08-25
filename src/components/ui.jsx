@@ -142,3 +142,30 @@ export function Screen({ title, children, pad = 16 }) {
     </div>
   );
 }
+
+/* Colour-coded article chip, matching the booklet: der=blue, die=red, das=green.
+   Colour is a memory aid, never the only signal — the word itself is always
+   spelled out, so this stays readable for colour-blind users. */
+export function Article({ article, size = 13 }) {
+  if (!article) {
+    return (
+      <span style={{
+        fontFamily: sans, fontSize: size, color: C.inkSoft,
+        minWidth: 34, display: "inline-block",
+      }}>
+        –
+      </span>
+    );
+  }
+  const key = article === "der" ? "Der" : article === "die" ? "Die" : "Das";
+  return (
+    <span style={{
+      fontFamily: sans, fontSize: size, fontWeight: 700,
+      color: C[`art${key}`], background: C[`art${key}Soft`],
+      borderRadius: 6, padding: "3px 7px", minWidth: 34,
+      textAlign: "center", display: "inline-block", flexShrink: 0,
+    }}>
+      {article}
+    </span>
+  );
+}

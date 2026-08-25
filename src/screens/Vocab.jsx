@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import {
-  ArrowLeft, Layers, Search, Flame, Check, Shuffle, Type, Ear, Table2,
+  ArrowLeft, Layers, Search, Flame, Check, Shuffle, Type, Ear, Table2, BookMarked, ChevronRight,
 } from "lucide-react";
 import { C, serif, sans } from "../theme.js";
 import { Card, Btn, ProgressRing, SectionLabel, Screen, Speak, TAP } from "../components/ui.jsx";
@@ -12,6 +12,8 @@ import {
   conjugationExercise, caseExercises, shuffle,
 } from "../lib/generate.js";
 import { hasGerman } from "../lib/speech.js";
+import Themen from "./Themen.jsx";
+import { TOTAL as THEMEN_TOTAL, CATEGORIES } from "../data/themen.js";
 
 export default function Vocab({ store }) {
   const [mode, setMode] = useState(null);
@@ -28,6 +30,7 @@ export default function Vocab({ store }) {
   if (mode === "review") {
     return <Review queue={queue} cards={cards} gradeCard={gradeCard} onExit={() => setMode(null)} />;
   }
+  if (mode === "themen") return <Themen onExit={() => setMode(null)} />;
   if (mode) {
     return <Drill mode={mode} onExit={() => setMode(null)} />;
   }
@@ -66,6 +69,28 @@ export default function Vocab({ store }) {
             <Layers size={17} /> Wiederholen starten
           </Btn>
         )}
+      </Card>
+
+      <SectionLabel>Nachschlagen</SectionLabel>
+      <Card onClick={() => setMode("themen")} style={{
+        marginBottom: 20, cursor: "pointer", padding: 15,
+        display: "flex", alignItems: "center", gap: 13,
+        background: C.goldSoft, borderColor: C.gold,
+      }}>
+        <div style={{
+          width: 42, height: 42, borderRadius: 11, background: C.gold, color: "#fff",
+          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+        }}>
+          <BookMarked size={20} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: serif, fontSize: 17.5, color: C.ink }}>Themen</div>
+          <div style={{ fontFamily: sans, fontSize: 12.5, color: C.inkSoft, lineHeight: 1.45 }}>
+            {THEMEN_TOTAL} Wörter mit Beispielsätzen<br />
+            {CATEGORIES.length} Kategorien · zum Lesen und Nachschlagen
+          </div>
+        </div>
+        <ChevronRight size={18} color={C.inkSoft} />
       </Card>
 
       <SectionLabel>Freies Üben</SectionLabel>

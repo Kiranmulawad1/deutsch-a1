@@ -21,6 +21,13 @@ const LIGHT = {
   red: "#B84438",
   redSoft: "#F6E5E2",
   line: "#DED3BE",
+  /* Booklet article colour code — der/die/das */
+  artDer: "#1F4E79",
+  artDie: "#C0392B",
+  artDas: "#2E7D32",
+  artDerSoft: "#E4EDF6",
+  artDieSoft: "#F9E6E3",
+  artDasSoft: "#E4F0E6",
 };
 
 const DARK = {
@@ -39,6 +46,13 @@ const DARK = {
   red: "#E58A7C",
   redSoft: "#3C2320",
   line: "#3B3247",
+  /* Lightened for dark backgrounds — same hue relationships */
+  artDer: "#8CB8E8",
+  artDie: "#EB9084",
+  artDas: "#82C98D",
+  artDerSoft: "#1E2A3A",
+  artDieSoft: "#3A241F",
+  artDasSoft: "#1C3324",
 };
 
 /* Every token is exposed as a CSS custom property so the palette can flip
