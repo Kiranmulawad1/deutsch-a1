@@ -17,6 +17,10 @@ button { font: inherit; cursor: pointer; }
 /* 16px minimum or iOS zooms the page when an input takes focus */
 input, textarea, select { font: inherit; font-size: 16px; }
 :focus-visible { outline: 2px solid var(--c-plum); outline-offset: 2px; }
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .25; }
+}
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }

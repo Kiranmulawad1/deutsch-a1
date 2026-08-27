@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Home as HomeIcon, BookOpen, Layers, Trophy, Settings as Cog } from "lucide-react";
+import { Home as HomeIcon, BookOpen, Layers, Mic, Trophy, Settings as Cog } from "lucide-react";
 import { C, sans } from "./theme.js";
 import { useStore } from "./lib/store.js";
 import { initSpeech } from "./lib/speech.js";
@@ -8,12 +8,14 @@ import Home from "./screens/Home.jsx";
 import Grammar from "./screens/Grammar.jsx";
 import Vocab from "./screens/Vocab.jsx";
 import Exams from "./screens/Exams.jsx";
+import Sprechen from "./screens/Sprechen.jsx";
 import Settings from "./screens/Settings.jsx";
 
 const TABS = [
   { id: "home",    label: "Start",     icon: HomeIcon },
   { id: "grammar", label: "Grammatik", icon: BookOpen },
   { id: "vocab",   label: "Wörter",    icon: Layers },
+  { id: "speak",   label: "Sprechen",  icon: Mic },
   { id: "exams",   label: "Prüfung",   icon: Trophy },
   { id: "more",    label: "Mehr",      icon: Cog },
 ];
@@ -49,6 +51,7 @@ export default function App() {
     home:    <Home store={store} go={setTab} />,
     grammar: <Grammar key="g" store={store} />,
     vocab:   <Vocab key="v" store={store} />,
+    speak:   <Sprechen key="s" store={store} />,
     exams:   <Exams key="e" store={store} />,
     more:    <Settings store={store} />,
   };
@@ -82,13 +85,13 @@ export default function App() {
           return (
             <button key={id} onClick={() => setTab(id)} aria-current={on ? "page" : undefined}
               style={{
-                minHeight: TAP + 12, border: "none", background: "transparent",
+                minHeight: TAP + 12, border: "none", background: "transparent", overflow: "hidden",
                 display: "flex", flexDirection: "column", alignItems: "center",
                 justifyContent: "center", gap: 3, padding: "8px 2px",
                 color: on ? C.plum : C.inkSoft,
               }}>
-              <Icon size={21} strokeWidth={on ? 2.4 : 1.9} />
-              <span style={{ fontFamily: sans, fontSize: 10.5, fontWeight: on ? 700 : 500 }}>
+              <Icon size={20} strokeWidth={on ? 2.4 : 1.9} />
+              <span style={{ fontFamily: sans, fontSize: 9.5, fontWeight: on ? 700 : 500 }}>
                 {label}
               </span>
             </button>
