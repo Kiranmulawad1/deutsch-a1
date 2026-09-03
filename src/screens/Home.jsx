@@ -2,14 +2,18 @@ import React, { useMemo } from "react";
 import { Flame, Layers, BookOpen, Trophy, ChevronRight } from "lucide-react";
 import { C, serif, sans } from "../theme.js";
 import { Card, Btn, ProgressRing, SectionLabel, Screen } from "../components/ui.jsx";
-import { CHAPTERS, TOPICS } from "../data/grammar.js";
-import { VOCAB } from "../data/vocab.js";
+import { levelData } from "../data/levels.js";
 import { buildQueue } from "../lib/srs.js";
-import { PASS_MARK } from "../data/exams.js";
+
 
 export default function Home({ store, go }) {
-  const { state } = store;
-  const { best, cards, settings, streak, exams } = state;
+  const { state, progress, level } = store;
+  const L = levelData(level);
+  const { CHAPTERS, TOPICS } = L.grammar;
+  const VOCAB = L.vocab;
+  const PASS_MARK = L.passMark;
+  const { best, cards, exams } = progress;
+  const { settings, streak } = state;
 
   const due = useMemo(
     () => buildQueue(VOCAB, cards, settings.newPerDay).length,
@@ -33,8 +37,11 @@ export default function Home({ store, go }) {
       <div style={{ marginBottom: 20 }}>
         <div style={{ fontFamily: sans, fontSize: 14, color: C.inkSoft }}>{greeting},</div>
         <h1 style={{ fontFamily: serif, fontSize: 27, margin: "2px 0 0", color: C.ink }}>
-          Deutsch A1
+          Deutsch {L.label}
         </h1>
+        <div style={{ fontFamily: sans, fontSize: 13, color: C.inkSoft, marginTop: 4, lineHeight: 1.5 }}>
+          {L.blurb}
+        </div>
       </div>
 
       <Card style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 16 }}>

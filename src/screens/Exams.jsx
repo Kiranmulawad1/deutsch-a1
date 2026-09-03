@@ -2,25 +2,27 @@ import React, { useState, useEffect, useMemo } from "react";
 import { ArrowLeft, Clock, Volume2, Check, X, Trophy, ChevronRight } from "lucide-react";
 import { C, serif, sans } from "../theme.js";
 import { Card, Btn, ProgressRing, Stamp, SectionLabel, Screen, TAP } from "../components/ui.jsx";
-import { EXAMS, PASS_MARK, SECTIONS } from "../data/exams.js";
+import { levelData } from "../data/levels.js";
 import { speak, hasGerman, stopSpeaking } from "../lib/speech.js";
 import { matches } from "../lib/text.js";
 import { shuffle } from "../lib/generate.js";
 
 export default function Exams({ store }) {
   const [run, setRun] = useState(null);
-  const { state, addExam } = store;
+  const { state, progress, addExam, level } = store;
+  const L = levelData(level);
+  const { exams: EXAMS, examSections: SECTIONS, passMark: PASS_MARK } = L;
 
   if (run) {
-    return <ExamRun exam={run} rate={state.settings.rate}
+    return <ExamRun exam={run} rate={state.settings.rate} sections={SECTIONS} passMark={PASS_MARK}
       onDone={(r) => { addExam(r); setRun(null); }}
       onQuit={() => { stopSpeaking(); setRun(null); }} />;
   }
 
   return (
-    <Screen title="Prüfung">
+    <Screen title={`Prüfung · ${L.label}`}>
       <Card style={{ marginBottom: 18, background: C.paper2 }}>
-        <SectionLabel>Goethe-Zertifikat A1 · Start Deutsch 1</SectionLabel>
+        <SectionLabel>{`Goethe-Zertifikat ${L.label}`}</SectionLabel>
         <div style={{ fontFamily: sans, fontSize: 14, lineHeight: 1.6, color: C.ink }}>
           Vier Teile, wie in der echten Prüfung. Bestanden ab{" "}
           <strong>{Math.round(PASS_MARK * 100)} %</strong>.
@@ -50,7 +52,7 @@ export default function Exams({ store }) {
       <SectionLabel>Modelltests</SectionLabel>
       <div style={{ display: "grid", gap: 10 }}>
         {EXAMS.map((e) => {
-          const past = state.exams.filter((r) => r.examId === e.id);
+          const past = progress.exams.filter((r) => r.examId === e.id);
           const best = past.length ? Math.max(...past.map((r) => r.ratio)) : null;
           return (
             <Card key={e.id} onClick={() => setRun(e)} style={{
@@ -71,11 +73,11 @@ export default function Exams({ store }) {
         })}
       </div>
 
-      {state.exams.length > 0 && (
+      {progress.exams.length > 0 && (
         <>
           <SectionLabel style={{ marginTop: 22 }}>Verlauf</SectionLabel>
           <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
-            {state.exams.slice(0, 6).map((r, i) => (
+            {progress.exams.slice(0, 6).map((r, i) => (
               <Card key={i} style={{
                 padding: 12, display: "flex", alignItems: "center", gap: 12,
               }}>
@@ -103,7 +105,7 @@ export default function Exams({ store }) {
 }
 
 /* ---------------- running an exam ---------------- */
-function ExamRun({ exam, rate, onDone, onQuit }) {
+function ExamRun({ exam, rate, sections: SECTIONS, passMark: PASS_MARK, onDone, onQuit }) {
   const [step, setStep] = useState(0); // 0 hören 1 lesen 2 schreiben 3 sprechen 4 result
   const [scores, setScores] = useState({});
 

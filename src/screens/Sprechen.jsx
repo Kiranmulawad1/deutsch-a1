@@ -7,23 +7,24 @@ import { C, serif, sans } from "../theme.js";
 import { Card, Btn, SectionLabel, Screen, Speak, TAP } from "../components/ui.jsx";
 import Recorder from "../components/Recorder.jsx";
 import { SOUNDS, PAIRS, TONGUE_TWISTERS } from "../data/pronunciation.js";
-import { VOCAB } from "../data/vocab.js";
+import { levelData } from "../data/levels.js";
 import { hasGerman, speak, stopSpeaking } from "../lib/speech.js";
 import { canRecord } from "../lib/record.js";
 import { shuffle } from "../lib/generate.js";
-import { CHAPTERS, TOPICS } from "../data/grammar.js";
+
 
 export default function Sprechen({ store }) {
   const [mode, setMode] = useState(null);
   const rate = store.state.settings.rate;
+  const L = levelData(store.level);
 
-  if (mode === "shadow") return <Shadowing rate={rate} onExit={() => setMode(null)} />;
+  if (mode === "shadow") return <Shadowing rate={rate} L={L} onExit={() => setMode(null)} />;
   if (mode === "sounds") return <SoundGuide rate={rate} onExit={() => setMode(null)} />;
   if (mode === "pairs") return <MinimalPairs rate={rate} onExit={() => setMode(null)} />;
   if (mode === "free") return <FreeSpeak rate={rate} onExit={() => setMode(null)} />;
 
   return (
-    <Screen title="Sprechen">
+    <Screen title={`Sprechen · ${L.label}`}>
       <Card style={{ marginBottom: 18, background: C.paper2 }}>
         <div style={{ fontFamily: sans, fontSize: 14, lineHeight: 1.65, color: C.ink }}>
           Hör das Vorbild, sprich nach, nimm dich auf — und vergleiche.
@@ -120,15 +121,15 @@ function Head({ title, sub, onExit }) {
 }
 
 /* ---------- Nachsprechen: sentences from the app's own content ---------- */
-function Shadowing({ rate, onExit }) {
+function Shadowing({ rate, L, onExit }) {
   const items = useMemo(() => {
-    const fromGrammar = TOPICS.flatMap((t) =>
+    const fromGrammar = L.grammar.TOPICS.flatMap((t) =>
       t.ex.map(([de, en]) => ({ de, en, src: t.title }))
     );
-    const fromVocab = VOCAB.map((w) => ({ de: w.ex_de, en: w.ex_en, src: w.full }));
+    const fromVocab = L.vocab.map((w) => ({ de: w.ex_de, en: w.ex_en, src: w.full }));
     const twisters = TONGUE_TWISTERS.map(([de, en]) => ({ de, en, src: "Zungenbrecher" }));
     return shuffle([...twisters, ...fromGrammar, ...fromVocab]).slice(0, 40);
-  }, []);
+  }, [L]);
 
   const [i, setI] = useState(0);
   const it = items[i];

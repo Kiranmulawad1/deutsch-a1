@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Home as HomeIcon, BookOpen, Layers, Mic, Trophy, Settings as Cog } from "lucide-react";
-import { C, sans } from "./theme.js";
+import { C, serif, sans } from "./theme.js";
 import { useStore } from "./lib/store.js";
 import { initSpeech } from "./lib/speech.js";
 import { TAP } from "./components/ui.jsx";
@@ -10,6 +10,7 @@ import Vocab from "./screens/Vocab.jsx";
 import Exams from "./screens/Exams.jsx";
 import Sprechen from "./screens/Sprechen.jsx";
 import Settings from "./screens/Settings.jsx";
+import { LEVEL_IDS, levelData } from "./data/levels.js";
 
 const TABS = [
   { id: "home",    label: "Start",     icon: HomeIcon },
@@ -49,10 +50,10 @@ export default function App() {
   // Each tab keeps its own internal navigation, so remount on switch.
   const screens = {
     home:    <Home store={store} go={setTab} />,
-    grammar: <Grammar key="g" store={store} />,
-    vocab:   <Vocab key="v" store={store} />,
-    speak:   <Sprechen key="s" store={store} />,
-    exams:   <Exams key="e" store={store} />,
+    grammar: <Grammar key={`g-${store.level}`} store={store} />,
+    vocab:   <Vocab key={`v-${store.level}`} store={store} />,
+    speak:   <Sprechen key={`s-${store.level}`} store={store} />,
+    exams:   <Exams key={`e-${store.level}`} store={store} />,
     more:    <Settings store={store} />,
   };
 
@@ -64,6 +65,44 @@ export default function App() {
       flexDirection: "column",
       paddingTop: "var(--safe-t)",
     }}>
+      {/* Level switcher — always visible, because which level you are in
+          changes every screen below it. */}
+      <header style={{
+        position: "sticky", top: 0, zIndex: 15,
+        background: C.paper, borderBottom: `1px solid ${C.line}`,
+        display: "flex", alignItems: "center", gap: 10,
+        padding: "8px 14px",
+      }}>
+        <div style={{
+          fontFamily: serif, fontWeight: 700, fontSize: 15, color: C.ink,
+          flex: 1, minWidth: 0,
+        }}>
+          Deutsch
+        </div>
+        <div role="group" aria-label="Niveau wählen" style={{
+          display: "flex", gap: 4, background: C.paper2,
+          border: `1px solid ${C.line}`, borderRadius: 10, padding: 3,
+        }}>
+          {LEVEL_IDS.map((id) => {
+            const on = store.level === id;
+            const L = levelData(id);
+            return (
+              <button key={id} onClick={() => store.setLevel(id)}
+                aria-pressed={on}
+                style={{
+                  minHeight: 34, minWidth: 52, borderRadius: 8, border: "none",
+                  background: on ? C.plum : "transparent",
+                  color: on ? "#fff" : C.inkSoft,
+                  fontFamily: sans, fontWeight: 700, fontSize: 14,
+                  transition: "background .15s ease",
+                }}>
+                {L.label}
+              </button>
+            );
+          })}
+        </div>
+      </header>
+
       <main style={{
         flex: 1,
         // clear the fixed tab bar plus the iPhone home indicator

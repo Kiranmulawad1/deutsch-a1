@@ -5,7 +5,7 @@ import {
 import { C, serif, sans } from "../theme.js";
 import { Card, Btn, ProgressRing, SectionLabel, Screen, Speak, TAP } from "../components/ui.jsx";
 import Exercise from "../components/Exercise.jsx";
-import { VOCAB, NOUNS } from "../data/vocab.js";
+import { levelData } from "../data/levels.js";
 import { buildQueue, schedule, GRADES, today, newCard } from "../lib/srs.js";
 import {
   vocabChoice, vocabTypeIn, genderDrill, clozeFromWord, dictation,
@@ -17,8 +17,11 @@ import { TOTAL as THEMEN_TOTAL, CATEGORIES } from "../data/themen.js";
 
 export default function Vocab({ store }) {
   const [mode, setMode] = useState(null);
-  const { state, gradeCard } = store;
-  const { cards, settings } = state;
+  const { progress, gradeCard, state, level } = store;
+  const L = levelData(level);
+  const { vocab: VOCAB, nouns: NOUNS } = L;
+  const cards = progress.cards;
+  const settings = state.settings;
 
   const queue = useMemo(
     () => buildQueue(VOCAB, cards, settings.newPerDay),
@@ -32,11 +35,11 @@ export default function Vocab({ store }) {
   }
   if (mode === "themen") return <Themen onExit={() => setMode(null)} />;
   if (mode) {
-    return <Drill mode={mode} onExit={() => setMode(null)} />;
+    return <Drill mode={mode} vocab={VOCAB} nouns={NOUNS} onExit={() => setMode(null)} />;
   }
 
   return (
-    <Screen title="Wortschatz">
+    <Screen title={`Wortschatz · ${L.label}`}>
       <Card style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 16 }}>
         <ProgressRing value={learned / VOCAB.length} size={62} stroke={7}
           label={`${learned}`} />
@@ -71,6 +74,7 @@ export default function Vocab({ store }) {
         )}
       </Card>
 
+      {L.hasThemen && (<>
       <SectionLabel>Nachschlagen</SectionLabel>
       <Card onClick={() => setMode("themen")} style={{
         marginBottom: 20, cursor: "pointer", padding: 15,
@@ -92,6 +96,7 @@ export default function Vocab({ store }) {
         </div>
         <ChevronRight size={18} color={C.inkSoft} />
       </Card>
+      </>)}
 
       <SectionLabel>Freies Üben</SectionLabel>
       <div style={{ display: "grid", gap: 10 }}>
@@ -274,7 +279,7 @@ function Review({ queue, cards, gradeCard, onExit }) {
 const gradeColor = (g) => [C.red, C.gold, C.green, C.plum][g];
 
 /* ---------------- free drills ---------------- */
-function Drill({ mode, onExit }) {
+function Drill({ mode, vocab: VOCAB, nouns: NOUNS, onExit }) {
   const items = useMemo(() => {
     if (mode === "gender") return shuffle(NOUNS).slice(0, 20).map(genderDrill);
     if (mode === "case") return caseExercises(12);
@@ -285,14 +290,14 @@ function Drill({ mode, onExit }) {
       return shuffle(VOCAB.filter((w) => w.ex_de.split(" ").length <= 7))
         .slice(0, 10).map(dictation);
     return [];
-  }, [mode]);
+  }, [mode, VOCAB, NOUNS]);
 
   const [i, setI] = useState(0);
   const [score, setScore] = useState(0);
   const [answered, setAnswered] = useState(false);
   const [done, setDone] = useState(false);
 
-  if (mode === "browse") return <Browse onExit={onExit} />;
+  if (mode === "browse") return <Browse vocab={VOCAB} onExit={onExit} />;
 
   if (done || !items.length) {
     const ratio = items.length ? score / items.length : 0;
@@ -353,7 +358,7 @@ function Drill({ mode, onExit }) {
 }
 
 /* ---------------- dictionary ---------------- */
-function Browse({ onExit }) {
+function Browse({ vocab: VOCAB, onExit }) {
   const [q, setQ] = useState("");
   const results = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -361,7 +366,7 @@ function Browse({ onExit }) {
     return VOCAB.filter(
       (w) => w.de.toLowerCase().includes(s) || w.en.toLowerCase().includes(s)
     ).slice(0, 80);
-  }, [q]);
+  }, [q, VOCAB]);
 
   return (
     <Screen>

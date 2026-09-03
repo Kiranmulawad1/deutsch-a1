@@ -1,9 +1,12 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { load, save } from "./storage.js";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { load, save, EMPTY_STATE } from "./storage.js";
 import { bumpStreak } from "./srs.js";
 
 /* One store for the whole app. Writes are debounced so a fast review
-   session doesn't hit localStorage on every keystroke. */
+   session doesn't hit localStorage on every keystroke.
+
+   Everything level-scoped is read and written through `level`, so screens
+   never have to know which namespace they are in. */
 export function useStore() {
   const [state, setState] = useState(load);
   const timer = useRef(null);
@@ -25,31 +28,51 @@ export function useStore() {
     };
   }, [state]);
 
-  const recordBest = useCallback((key, ratio) => {
-    setState((s) => {
-      const cur = s.best[key] ?? 0;
-      if (ratio <= cur) return s;
-      return { ...s, best: { ...s.best, [key]: ratio } };
-    });
+  const level = state.level;
+  const patchLevel = useCallback((fn) => {
+    setState((s) => ({ ...s, [s.level]: fn(s[s.level]) }));
   }, []);
+
+  const recordBest = useCallback((key, ratio) => {
+    patchLevel((L) => {
+      const cur = L.best[key] ?? 0;
+      if (ratio <= cur) return L;
+      return { ...L, best: { ...L.best, [key]: ratio } };
+    });
+  }, [patchLevel]);
 
   const gradeCard = useCallback((wordId, card) => {
     setState((s) => ({
       ...s,
-      cards: { ...s.cards, [wordId]: card },
+      [s.level]: { ...s[s.level], cards: { ...s[s.level].cards, [wordId]: card } },
       streak: bumpStreak(s.streak),
     }));
   }, []);
 
   const addExam = useCallback((result) => {
-    setState((s) => ({ ...s, exams: [result, ...s.exams].slice(0, 20) }));
-  }, []);
+    patchLevel((L) => ({ ...L, exams: [result, ...L.exams].slice(0, 20) }));
+  }, [patchLevel]);
 
   const setSettings = useCallback((patch) => {
     setState((s) => ({ ...s, settings: { ...s.settings, ...patch } }));
   }, []);
 
+  const setLevel = useCallback((next) => {
+    setState((s) => (s.level === next ? s : { ...s, level: next }));
+  }, []);
+
+  const resetLevel = useCallback(() => {
+    setState((s) => ({ ...s, [s.level]: { best: {}, cards: {}, exams: [] } }));
+  }, []);
+
   const replaceAll = useCallback((next) => setState(next), []);
 
-  return { state, recordBest, gradeCard, addExam, setSettings, replaceAll };
+  /* Flattened view of the active level, so screens can keep using
+     store.progress.best / .cards / .exams without branching. */
+  const progress = useMemo(() => state[level] ?? EMPTY_STATE.a1, [state, level]);
+
+  return {
+    state, level, progress,
+    recordBest, gradeCard, addExam, setSettings, setLevel, resetLevel, replaceAll,
+  };
 }

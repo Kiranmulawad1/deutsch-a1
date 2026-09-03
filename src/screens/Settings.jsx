@@ -4,10 +4,11 @@ import { C, serif, sans } from "../theme.js";
 import { Card, Btn, SectionLabel, Screen, TAP } from "../components/ui.jsx";
 import { exportJSON, importJSON, EMPTY_STATE } from "../lib/storage.js";
 import { speak, hasGerman } from "../lib/speech.js";
-import { VOCAB } from "../data/vocab.js";
+import { LEVEL_IDS, levelData } from "../data/levels.js";
 
 export default function Settings({ store }) {
-  const { state, setSettings, replaceAll } = store;
+  const { state, level, setSettings, replaceAll, resetLevel } = store;
+  const L = levelData(level);
   const fileRef = useRef(null);
   const [msg, setMsg] = useState(null);
 
@@ -41,13 +42,20 @@ export default function Settings({ store }) {
   };
 
   const reset = () => {
-    if (confirm("Wirklich allen Fortschritt löschen? Das kann nicht rückgängig gemacht werden.")) {
+    if (confirm(`Wirklich den ganzen ${L.label}-Fortschritt löschen? Das kann nicht rückgängig gemacht werden.`)) {
+      resetLevel();
+      setMsg({ ok: true, text: `${L.label} zurückgesetzt.` });
+    }
+  };
+
+  const resetAll = () => {
+    if (confirm("Wirklich ALLE Niveaus löschen (A1 und A2)?")) {
       replaceAll({ ...EMPTY_STATE });
       setMsg({ ok: true, text: "Alles zurückgesetzt." });
     }
   };
 
-  const learned = Object.keys(state.cards).length;
+  const learned = Object.keys(state[level].cards).length;
 
   return (
     <Screen title="Einstellungen">
@@ -105,6 +113,37 @@ export default function Settings({ store }) {
         </>
       )}
 
+      <SectionLabel>Niveau</SectionLabel>
+      <Card style={{ marginBottom: 18 }}>
+        <div style={{ fontFamily: sans, fontSize: 13, color: C.inkSoft, lineHeight: 1.6, marginBottom: 12 }}>
+          A1 und A2 haben getrennten Fortschritt — Vokabelkarten und Ergebnisse
+          werden nie vermischt. Umschalten oben rechts.
+        </div>
+        <div style={{ display: "grid", gap: 8 }}>
+          {LEVEL_IDS.map((id) => {
+            const Lv = levelData(id);
+            const n = Object.keys(state[id].cards).length;
+            const done = Object.keys(state[id].best).filter((k) => k !== "final").length;
+            return (
+              <div key={id} style={{
+                display: "flex", alignItems: "center", gap: 10,
+                fontFamily: sans, fontSize: 13.5, color: C.ink,
+                padding: "8px 0", borderTop: `1px solid ${C.line}`,
+              }}>
+                <strong style={{
+                  color: id === level ? C.plum : C.inkSoft, minWidth: 26,
+                }}>
+                  {Lv.label}
+                </strong>
+                <span style={{ flex: 1, color: C.inkSoft }}>
+                  {n}/{Lv.vocab.length} Wörter · {done} Kapitel
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+
       <SectionLabel>Fortschritt sichern</SectionLabel>
       <Card style={{ marginBottom: 18 }}>
         <div style={{ fontFamily: sans, fontSize: 13, color: C.inkSoft, lineHeight: 1.6, marginBottom: 14 }}>
@@ -133,15 +172,20 @@ export default function Settings({ store }) {
 
       <Card style={{ borderColor: C.red }}>
         <Btn kind="quiet" full onClick={reset} style={{ color: C.red }}>
-          <Trash2 size={16} /> Allen Fortschritt löschen
+          <Trash2 size={16} /> Nur {L.label} zurücksetzen
         </Btn>
+        <div style={{ borderTop: `1px solid ${C.line}`, marginTop: 8, paddingTop: 8 }}>
+          <Btn kind="quiet" full onClick={resetAll} style={{ color: C.red, fontSize: 14 }}>
+            Alle Niveaus löschen
+          </Btn>
+        </div>
       </Card>
 
       <div style={{
         fontFamily: sans, fontSize: 12, color: C.inkSoft,
         textAlign: "center", marginTop: 26, lineHeight: 1.7,
       }}>
-        Deutsch A1 Trainer · {VOCAB.length} Wörter · offline nutzbar<br />
+        Deutsch A1 + A2 · {LEVEL_IDS.reduce((n, id) => n + levelData(id).vocab.length, 0)} Wörter · offline nutzbar<br />
         Läuft ohne Konto, ohne Server, ohne Internet.
       </div>
     </Screen>

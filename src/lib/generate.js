@@ -1,7 +1,8 @@
 /* Turns the static content into runnable exercises.
    Every generator returns objects the <Exercise> component understands. */
 
-import { VOCAB, NOUNS } from "../data/vocab.js";
+/* The distractor pool is passed in, so exercises stay inside the level
+   the learner is studying. */
 
 export function shuffle(arr) {
   const a = [...arr];
@@ -29,9 +30,10 @@ export function fromQuiz(q) {
 }
 
 /* ---- vocabulary: recognition and production ---- */
-export function vocabChoice(word, dir = "de-en") {
-  const pool = VOCAB.filter((w) => w.id !== word.id && w.type === word.type);
-  const distractors = pick(pool.length >= 3 ? pool : VOCAB.filter((w) => w.id !== word.id), 3);
+export function vocabChoice(word, dir = "de-en", all = []) {
+  const others = all.filter((w) => w.id !== word.id);
+  const sameType = others.filter((w) => w.type === word.type);
+  const distractors = pick(sameType.length >= 3 ? sameType : others, 3);
   const deToEn = dir === "de-en";
   const correct = deToEn ? word.en : word.full;
   const opts = shuffle([correct, ...distractors.map((d) => (deToEn ? d.en : d.full))]);
@@ -203,8 +205,8 @@ export function caseExercises(n = 10) {
 }
 
 /* ---- mixed session builder for a vocabulary review card ---- */
-export function exercisesForWord(word) {
-  const out = [vocabChoice(word, "de-en")];
+export function exercisesForWord(word, all = []) {
+  const out = [vocabChoice(word, "de-en", all)];
   if (word.article) out.push(genderDrill(word));
   const cloze = clozeFromWord(word);
   if (cloze) out.push(cloze);

@@ -5,18 +5,21 @@ import {
 import { C, serif, sans } from "../theme.js";
 import { Card, Btn, ProgressRing, Stamp, SectionLabel, Screen, Speak, TAP } from "../components/ui.jsx";
 import Exercise from "../components/Exercise.jsx";
-import { CHAPTERS, TOPICS, topicsOf, quizOfChapter, ALL_Q } from "../data/grammar.js";
+import { levelData } from "../data/levels.js";
 import { fromQuiz, shuffle, orderFromExample } from "../lib/generate.js";
 
 const PASS = 0.7;
 
 export default function Grammar({ store }) {
   const [view, setView] = useState({ name: "chapters" });
-  const { state, recordBest } = store;
+  const { progress, recordBest, level } = store;
+  const L = levelData(level);
+  const { CHAPTERS, TOPICS, topicsOf, quizOfChapter, ALL_Q } = L.grammar;
+  const state = progress;
 
   if (view.name === "chapters") {
     return (
-      <Screen title="Grammatik">
+      <Screen title={`Grammatik · ${L.label}`}>
         <div style={{ display: "grid", gap: 12 }}>
           {CHAPTERS.map((c) => {
             const best = state.best[c.n] ?? 0;
@@ -184,7 +187,7 @@ export default function Grammar({ store }) {
   }
 
   /* ---- quiz ---- */
-  const { questions, title, key, back } = buildQuiz(view);
+  const { questions, title, key, back } = buildQuiz(view, L.grammar);
   return (
     <QuizRunner
       key={`${view.scope}-${view.ch ?? ""}-${view.ti ?? ""}`}
@@ -195,7 +198,8 @@ export default function Grammar({ store }) {
   );
 }
 
-function buildQuiz(view) {
+function buildQuiz(view, G) {
+  const { topicsOf, quizOfChapter, ALL_Q } = G;
   if (view.scope === "final") {
     return {
       questions: shuffle(ALL_Q).slice(0, 20),
